@@ -1,9 +1,11 @@
 const electron = require('electron');
 const path = require('path');
 const url = require('url');
+const server = require('./app'); //ADD THIS 
 
 // SET ENV
 process.env.NODE_ENV = 'development';
+
 
 const {app, BrowserWindow, Menu, ipcMain} = electron;
 
@@ -36,6 +38,9 @@ function createAddWindow(){
   addWindow = new BrowserWindow({
     width: 300,
     height:200,
+    webPreferences: {
+      nodeIntegration: true
+    },
     title:'Add Shopping List Item'
   });
   addWindow.loadURL(url.format({

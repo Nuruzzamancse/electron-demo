@@ -1,0 +1,604 @@
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <!-- http://wixtoolset.org/documentation/manual/v3/xsd/wix/product.html -->
+  <Product Id="*" UpgradeCode="3fb68058-c46f-4ede-825d-12ab3d273b54"
+          Name="Our Code World Desktop App"
+          Version="1.0.0"
+          Manufacturer="Our Code World Inc"
+          Language="1033">
+    <!-- Only run this installer on Windows 7 or up (or if it's already installed, I guess) -->
+    <!-- <Condition Message="This application is only supported on Windows 7 or higher.">
+      <![CDATA[Installed OR (VersionNT >= 601)]]>
+    </Condition> -->
+    <!-- http://wixtoolset.org/documentation/manual/v3/xsd/wix/package.html -->
+    <Package InstallerVersion="405"
+             Compressed="yes"
+             InstallScope="perMachine"
+             Comments="Windows Installer Package"
+             Platform="x86"/>
+
+    <!-- Overides the defautl install mode. It solves a problem where
+    individual packaged files that have the same version as in pervious
+    installed App version will be deleted if the files a re in use during
+    this upgrade. Unfortunately this causes an ICE 40 warning during linking. -->
+    <Property Id="REINSTALLMODE" Value="emus" />
+    <!-- Overrides the default reboot behavior if files are in use during the upgrade.
+     This way no unpxecpted reboot will happpen.-->
+    <Property Id="REBOOT" Value="ReallySuppress" />
+    
+    <Media Id="1" Cabinet="product.cab" EmbedCab="yes"/>
+
+    <!-- Handle Updates -->
+    <Upgrade Id="3fb68058-c46f-4ede-825d-12ab3d273b54">
+      <UpgradeVersion OnlyDetect="no" Property="PREVIOUSFOUND"
+          Minimum="0.0.0" IncludeMinimum="yes"
+          Maximum="1.0.0" IncludeMaximum="no" />
+    </Upgrade>
+
+    <InstallExecuteSequence>
+      <RemoveExistingProducts After="InstallInitialize" />
+    </InstallExecuteSequence>
+
+<UI Id="UserInterface">
+  <Property Id="WixUI_Mode" Value="InstallDir" />
+
+  <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
+  <TextStyle Id="WixUI_Font_Bigger" FaceName="Tahoma" Size="12" />
+  <TextStyle Id="WixUI_Font_Title" FaceName="Tahoma" Size="9" Bold="yes" />
+
+  <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
+
+  <DialogRef Id="BrowseDlg" />
+  <DialogRef Id="DiskCostDlg" />
+  <DialogRef Id="ErrorDlg" />
+  <DialogRef Id="FatalError" />
+  <DialogRef Id="FilesInUse" />
+  <DialogRef Id="MsiRMFilesInUse" />
+  <DialogRef Id="PrepareDlg" />
+  <DialogRef Id="ProgressDlg" />
+  <DialogRef Id="ResumeDlg" />
+  <DialogRef Id="UserExit" />
+
+  <Publish Dialog="BrowseDlg" Control="OK" Event="DoAction" Value="WixUIValidatePath" Order="3">1</Publish>
+  <Publish Dialog="BrowseDlg" Control="OK" Event="SpawnDialog" Value="InvalidDirDlg" Order="4"><![CDATA[NOT WIXUI_DONTVALIDATEPATH AND WIXUI_INSTALLDIR_VALID<>"1"]]></Publish>
+
+  <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
+
+  <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg">NOT Installed</Publish>
+  <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg">Installed AND PATCH</Publish>
+
+  <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg">1</Publish>
+  <Publish Dialog="InstallDirDlg" Control="Next" Event="SetTargetPath" Value="[WIXUI_INSTALLDIR]" Order="1">1</Publish>
+  <Publish Dialog="InstallDirDlg" Control="Next" Event="DoAction" Value="WixUIValidatePath" Order="2">NOT WIXUI_DONTVALIDATEPATH</Publish>
+  <Publish Dialog="InstallDirDlg" Control="Next" Event="SpawnDialog" Value="InvalidDirDlg" Order="3"><![CDATA[NOT WIXUI_DONTVALIDATEPATH AND WIXUI_INSTALLDIR_VALID<>"1"]]></Publish>
+  <Publish Dialog="InstallDirDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Order="4">WIXUI_DONTVALIDATEPATH OR WIXUI_INSTALLDIR_VALID="1"</Publish>
+  <Publish Dialog="InstallDirDlg" Control="ChangeFolder" Property="_BrowseProperty" Value="[WIXUI_INSTALLDIR]" Order="1">1</Publish>
+  <Publish Dialog="InstallDirDlg" Control="ChangeFolder" Event="SpawnDialog" Value="BrowseDlg" Order="2">1</Publish>
+
+  <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="InstallDirDlg" Order="1">NOT Installed</Publish>
+  <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg" Order="2">Installed AND NOT PATCH</Publish>
+  <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="2">Installed AND PATCH</Publish>
+
+  <Publish Dialog="MaintenanceWelcomeDlg" Control="Next" Event="NewDialog" Value="MaintenanceTypeDlg">1</Publish>
+
+  <Publish Dialog="MaintenanceTypeDlg" Control="RepairButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+  <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+  <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg">1</Publish>
+
+  <Property Id="ARPNOMODIFY" Value="1" />
+</UI>
+<Property Id="WIXUI_INSTALLDIR" Value="APPLICATIONROOTDIRECTORY" />
+<UIRef Id="WixUI_Common" />
+
+
+
+
+    <!-- Step 2: Add files and directories -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <!-- Installation files to %PROGRAMFILES% -->
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="APPLICATIONROOTDIRECTORY" Name="Our Code World Desktop App">
+          <Directory Id="_locales_4f45efaa_f5af_4cfd_8192_05fcf68f95c7" Name="locales">
+            <Component Id="_locales_am.pak_635382de_03ec_47fb_bb63_65fa4d45e24a" Guid="7aedd107-6163-45e3-9989-e6178d0f6f27" Win64="no">
+              <File Name="am.pak" Id="_locales_am.pak_635382de_03ec_47fb_bb63_65fa4d45e24a" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\am.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_ar.pak_badec90b_1261_4cf8_a596_3da6d8d5c12e" Guid="8ef3e453-ec81-47c3-bcf8-d066c63f26d9" Win64="no">
+              <File Name="ar.pak" Id="_locales_ar.pak_badec90b_1261_4cf8_a596_3da6d8d5c12e" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\ar.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_bg.pak_4fbc9af0_f7fd_49b8_a2fe_a3d0b9ce2a6d" Guid="b3b4a558-830b-4114-b21d-0cfb36ed5a4a" Win64="no">
+              <File Name="bg.pak" Id="_locales_bg.pak_4fbc9af0_f7fd_49b8_a2fe_a3d0b9ce2a6d" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\bg.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_bn.pak_56247380_2bb0_4a9e_846c_702b625cfa57" Guid="43d60a96-aae5-49de-90ab-305b4d12e969" Win64="no">
+              <File Name="bn.pak" Id="_locales_bn.pak_56247380_2bb0_4a9e_846c_702b625cfa57" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\bn.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_ca.pak_8077625f_f4da_4dab_bb51_ed6427b6ca60" Guid="f1c6add5-a0f0-416b-817a-42ce40992e99" Win64="no">
+              <File Name="ca.pak" Id="_locales_ca.pak_8077625f_f4da_4dab_bb51_ed6427b6ca60" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\ca.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_cs.pak_d928730a_ca22_4dcf_b480_f84b7a371d33" Guid="f7729da6-5211-4019-9222-a96e9978737b" Win64="no">
+              <File Name="cs.pak" Id="_locales_cs.pak_d928730a_ca22_4dcf_b480_f84b7a371d33" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\cs.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_da.pak_20da9415_11df_41d6_8ab9_1157c29d87d8" Guid="0b54625f-cddb-4376-afbf-9463d1cdb40c" Win64="no">
+              <File Name="da.pak" Id="_locales_da.pak_20da9415_11df_41d6_8ab9_1157c29d87d8" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\da.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_de.pak_c03f3d2f_a356_4656_ac70_508ad1b31460" Guid="542faf63-cfd7-442e-b972-2c465f9958b6" Win64="no">
+              <File Name="de.pak" Id="_locales_de.pak_c03f3d2f_a356_4656_ac70_508ad1b31460" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\de.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_el.pak_4ce6a7ac_4cd5_406e_8fa4_c5bee4c332e1" Guid="07891fc4-9e40-4cd5-8e98-b71157dadb37" Win64="no">
+              <File Name="el.pak" Id="_locales_el.pak_4ce6a7ac_4cd5_406e_8fa4_c5bee4c332e1" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\el.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_en_GB.pak_7c648ae8_b6a0_47c3_bc8e_178f56f3baec" Guid="0eb6a020-5eb9-4ab0-ac50-232cf87606d1" Win64="no">
+              <File Name="en-GB.pak" Id="_locales_en_GB.pak_7c648ae8_b6a0_47c3_bc8e_178f56f3baec" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\en-GB.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_en_US.pak_2c8e1292_ac6a_4f5f_9bca_1d2cf9e9e7f3" Guid="3939f5d6-c6e7-4a52-89e7-9b435bb17b43" Win64="no">
+              <File Name="en-US.pak" Id="_locales_en_US.pak_2c8e1292_ac6a_4f5f_9bca_1d2cf9e9e7f3" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\en-US.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_es_419.pak_24c847f1_6dc9_4f45_8daa_c6ef6b9ee8f1" Guid="725152fc-8981-4469-b2a8-1d5012bab54d" Win64="no">
+              <File Name="es-419.pak" Id="_locales_es_419.pak_24c847f1_6dc9_4f45_8daa_c6ef6b9ee8f1" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\es-419.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_es.pak_d5c092da_6a97_4421_8b95_171e6b0758d4" Guid="02bbeb40-4a22-4c97-8193-d8b405b91c9c" Win64="no">
+              <File Name="es.pak" Id="_locales_es.pak_d5c092da_6a97_4421_8b95_171e6b0758d4" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\es.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_et.pak_3119886c_df04_4af1_bac5_b8ab253502ce" Guid="55aac7ae-ff26-4f5c-8b35-88da78148e72" Win64="no">
+              <File Name="et.pak" Id="_locales_et.pak_3119886c_df04_4af1_bac5_b8ab253502ce" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\et.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_fa.pak_02b32ae5_62b2_4972_bdee_657e517edcad" Guid="3c427df2-1d5d-43c9-baec-f7268bc0acb1" Win64="no">
+              <File Name="fa.pak" Id="_locales_fa.pak_02b32ae5_62b2_4972_bdee_657e517edcad" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\fa.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_fake_bidi.pak_0ae0300b_785c_4541_ace9_dc34f8cfcbd1" Guid="cb960af4-10d6-4475-b606-730c9812eec2" Win64="no">
+              <File Name="fake-bidi.pak" Id="_locales_fake_bidi.pak_0ae0300b_785c_4541_ace9_dc34f8cfcbd1" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\fake-bidi.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_fi.pak_02918370_f003_469b_9514_b2057bfbceb4" Guid="31aa349d-4151-4b18-98b3-f7818ca1edf5" Win64="no">
+              <File Name="fi.pak" Id="_locales_fi.pak_02918370_f003_469b_9514_b2057bfbceb4" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\fi.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_fil.pak_49949b8d_9867_4ecb_911a_73600b35e258" Guid="00989c4c-0511-4227-ae49-7b68e750e02b" Win64="no">
+              <File Name="fil.pak" Id="_locales_fil.pak_49949b8d_9867_4ecb_911a_73600b35e258" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\fil.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_fr.pak_26bf4506_e1a0_4e42_b48e_41de630fcf3b" Guid="f6a4c89b-5184-4f08-a0d5-80e193a45cc7" Win64="no">
+              <File Name="fr.pak" Id="_locales_fr.pak_26bf4506_e1a0_4e42_b48e_41de630fcf3b" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\fr.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_gu.pak_46106f22_9cd4_48e3_941b_cea7b961f24a" Guid="7ca83a6c-3238-4bc1-8fbf-db588451c261" Win64="no">
+              <File Name="gu.pak" Id="_locales_gu.pak_46106f22_9cd4_48e3_941b_cea7b961f24a" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\gu.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_he.pak_8836866b_7ae7_4862_ac9b_6b01f33b03a9" Guid="9f00f575-c078-4622-867c-b41eb9a2057c" Win64="no">
+              <File Name="he.pak" Id="_locales_he.pak_8836866b_7ae7_4862_ac9b_6b01f33b03a9" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\he.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_hi.pak_3009bd0a_5725_436b_9db9_e0dea6ed02a2" Guid="05eba43b-580e-4b69-a5f7-3cfcf35f17d1" Win64="no">
+              <File Name="hi.pak" Id="_locales_hi.pak_3009bd0a_5725_436b_9db9_e0dea6ed02a2" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\hi.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_hr.pak_b7754820_5b6e_4a50_8581_acaf485063ad" Guid="d840018a-b952-4da8-9834-11aa98a8f097" Win64="no">
+              <File Name="hr.pak" Id="_locales_hr.pak_b7754820_5b6e_4a50_8581_acaf485063ad" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\hr.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_hu.pak_1dc60559_a12f_4c93_8d93_59875995c5ea" Guid="e3752c32-6e07-460b-b2a6-c3291c5d9a59" Win64="no">
+              <File Name="hu.pak" Id="_locales_hu.pak_1dc60559_a12f_4c93_8d93_59875995c5ea" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\hu.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_id.pak_4a188e7d_171e_4449_bba8_1cecc18c4a1f" Guid="6fc2b265-5954-4864-b83e-4571434c7644" Win64="no">
+              <File Name="id.pak" Id="_locales_id.pak_4a188e7d_171e_4449_bba8_1cecc18c4a1f" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\id.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_it.pak_6470e6ef_24e8_430b_bff3_e9c36f6c8280" Guid="f38bf7af-a4ff-4597-8cdd-ec49af1a7507" Win64="no">
+              <File Name="it.pak" Id="_locales_it.pak_6470e6ef_24e8_430b_bff3_e9c36f6c8280" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\it.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_ja.pak_ca6bb76c_c970_4c34_9936_6516ecac4689" Guid="ad4bdd02-6278-4b2b-97b6-cfb9bc524fdc" Win64="no">
+              <File Name="ja.pak" Id="_locales_ja.pak_ca6bb76c_c970_4c34_9936_6516ecac4689" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\ja.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_kn.pak_3a711116_f7fa_4779_8e8a_c03e8c3fc906" Guid="a44bbfb3-aa6c-4a2c-9654-89dc651a9b08" Win64="no">
+              <File Name="kn.pak" Id="_locales_kn.pak_3a711116_f7fa_4779_8e8a_c03e8c3fc906" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\kn.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_ko.pak_ac3736d4_6afd_46a6_a42b_013560260ad9" Guid="e8574e6a-f7c6-4ba8-b532-329d286164a4" Win64="no">
+              <File Name="ko.pak" Id="_locales_ko.pak_ac3736d4_6afd_46a6_a42b_013560260ad9" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\ko.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_lt.pak_1ba198c9_d09d_4055_8701_2f2343daf61e" Guid="daac431b-08a8-4e60-9e6a-b897885cac23" Win64="no">
+              <File Name="lt.pak" Id="_locales_lt.pak_1ba198c9_d09d_4055_8701_2f2343daf61e" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\lt.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_lv.pak_c908963a_a180_4e7f_bfa4_e77aad9c54e3" Guid="f9705f23-f938-4ab2-8f91-4115a169c32b" Win64="no">
+              <File Name="lv.pak" Id="_locales_lv.pak_c908963a_a180_4e7f_bfa4_e77aad9c54e3" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\lv.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_ml.pak_59a0d73a_2308_48ac_9fc3_a1b52ed946c1" Guid="efe9f64f-5694-466f-b807-f479a4abdd47" Win64="no">
+              <File Name="ml.pak" Id="_locales_ml.pak_59a0d73a_2308_48ac_9fc3_a1b52ed946c1" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\ml.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_mr.pak_9f0f952f_4126_4ca2_8756_519effb1a2f4" Guid="6aeb2b39-d2e1-4649-9b0d-086a5b594774" Win64="no">
+              <File Name="mr.pak" Id="_locales_mr.pak_9f0f952f_4126_4ca2_8756_519effb1a2f4" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\mr.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_ms.pak_62401e8a_4a72_446a_9278_962cbbceb1e6" Guid="243b5fbd-5196-48b5-a0f7-08993c595352" Win64="no">
+              <File Name="ms.pak" Id="_locales_ms.pak_62401e8a_4a72_446a_9278_962cbbceb1e6" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\ms.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_nb.pak_8bc5fbe8_2686_4b3e_acd8_9275af640cd3" Guid="1a940d2f-ebb4-4839-b05c-0ba9c8f644d8" Win64="no">
+              <File Name="nb.pak" Id="_locales_nb.pak_8bc5fbe8_2686_4b3e_acd8_9275af640cd3" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\nb.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_nl.pak_4c0f3f11_18a8_4b81_adad_56961b412b80" Guid="211e2edd-db31-4f7c-a89f-fbb1e63567fb" Win64="no">
+              <File Name="nl.pak" Id="_locales_nl.pak_4c0f3f11_18a8_4b81_adad_56961b412b80" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\nl.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_pl.pak_175ecf2e_730e_4dcb_8f3f_0aa0f78fa0ac" Guid="f0099b87-308f-4166-9c27-ecc9bf7c5791" Win64="no">
+              <File Name="pl.pak" Id="_locales_pl.pak_175ecf2e_730e_4dcb_8f3f_0aa0f78fa0ac" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\pl.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_pt_BR.pak_d19e8d15_da6e_416a_8eae_f42f5faeb8fd" Guid="b719f70f-085e-4f0b-aada-ccb2814d3950" Win64="no">
+              <File Name="pt-BR.pak" Id="_locales_pt_BR.pak_d19e8d15_da6e_416a_8eae_f42f5faeb8fd" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\pt-BR.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_pt_PT.pak_f157546b_fb30_4351_b2cf_7adaf9195190" Guid="677a4eca-f2e4-4647-bde5-681f4f2c8d4f" Win64="no">
+              <File Name="pt-PT.pak" Id="_locales_pt_PT.pak_f157546b_fb30_4351_b2cf_7adaf9195190" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\pt-PT.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_ro.pak_d875fc55_df90_4ca7_9f60_b2b6398aebf4" Guid="e5fceea4-d01e-48de-8f82-c754afbd84be" Win64="no">
+              <File Name="ro.pak" Id="_locales_ro.pak_d875fc55_df90_4ca7_9f60_b2b6398aebf4" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\ro.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_ru.pak_942c26dd_acfd_45f1_b894_175124a09d7d" Guid="3e66fb83-64dc-468f-88a7-447bec47393e" Win64="no">
+              <File Name="ru.pak" Id="_locales_ru.pak_942c26dd_acfd_45f1_b894_175124a09d7d" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\ru.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_sk.pak_099e3e95_f961_42ed_84f2_b26e6c4e601d" Guid="7bb830d4-52e9-4e51-bcd5-ab9140159c72" Win64="no">
+              <File Name="sk.pak" Id="_locales_sk.pak_099e3e95_f961_42ed_84f2_b26e6c4e601d" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\sk.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_sl.pak_491a4907_d4ba_422e_9323_91827a635155" Guid="2c1c00e7-f446-4180-abb7-312efc938fbe" Win64="no">
+              <File Name="sl.pak" Id="_locales_sl.pak_491a4907_d4ba_422e_9323_91827a635155" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\sl.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_sr.pak_73e0a7b9_f9ba_4a44_8aed_056dc331b41a" Guid="a52164fa-b169-408e-b3a8-628ecbbbb93b" Win64="no">
+              <File Name="sr.pak" Id="_locales_sr.pak_73e0a7b9_f9ba_4a44_8aed_056dc331b41a" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\sr.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_sv.pak_585732af_6308_493c_90ef_93cbca5910c0" Guid="449551f2-58b2-4c72-bf3d-4afc4943e659" Win64="no">
+              <File Name="sv.pak" Id="_locales_sv.pak_585732af_6308_493c_90ef_93cbca5910c0" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\sv.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_sw.pak_b9e5aad2_1f13_47f1_95ab_6a2388d6201d" Guid="228869b6-0f70-4987-8085-cc97d6132172" Win64="no">
+              <File Name="sw.pak" Id="_locales_sw.pak_b9e5aad2_1f13_47f1_95ab_6a2388d6201d" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\sw.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_ta.pak_55cafdc8_b140_4c5d_b8d9_cf118f19f17e" Guid="c51300b6-754a-4784-ad50-87ec0a20bccc" Win64="no">
+              <File Name="ta.pak" Id="_locales_ta.pak_55cafdc8_b140_4c5d_b8d9_cf118f19f17e" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\ta.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_te.pak_5c3e5fa0_f4ba_41d7_a400_0fe77b92023d" Guid="25ebe0fb-f64d-4991-8869-1a10471631b5" Win64="no">
+              <File Name="te.pak" Id="_locales_te.pak_5c3e5fa0_f4ba_41d7_a400_0fe77b92023d" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\te.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_th.pak_1dec9424_b94e_4f30_b844_be1998233e41" Guid="4ab3ad38-219d-4ea2-8947-a3117aaedf0d" Win64="no">
+              <File Name="th.pak" Id="_locales_th.pak_1dec9424_b94e_4f30_b844_be1998233e41" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\th.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_tr.pak_16115836_4042_4c0e_beab_b91c99328b2d" Guid="85bbd1ed-3fa9-4801-9a0a-b075b3912b14" Win64="no">
+              <File Name="tr.pak" Id="_locales_tr.pak_16115836_4042_4c0e_beab_b91c99328b2d" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\tr.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_uk.pak_34a54a56_fb5f_4a3d_bc85_4a4121c6e4f3" Guid="1cda96af-f0c1-4c03-ac72-e21725720733" Win64="no">
+              <File Name="uk.pak" Id="_locales_uk.pak_34a54a56_fb5f_4a3d_bc85_4a4121c6e4f3" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\uk.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_vi.pak_79b00bce_98c6_42b8_9f3a_ec0b797241d4" Guid="8a0bc8b3-21ad-4dd7-ac56-b26e3f6ff53a" Win64="no">
+              <File Name="vi.pak" Id="_locales_vi.pak_79b00bce_98c6_42b8_9f3a_ec0b797241d4" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\vi.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_zh_CN.pak_9971452c_9ae7_4b3e_a10a_be720c15e75a" Guid="b13b363c-e692-4801-913a-0fbced23c2a6" Win64="no">
+              <File Name="zh-CN.pak" Id="_locales_zh_CN.pak_9971452c_9ae7_4b3e_a10a_be720c15e75a" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\zh-CN.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_locales_zh_TW.pak_f7d5692b_6a6e_4db1_bfee_8016af9713b4" Guid="cd103434-b1d3-4bfb-bd2d-83febe4cffd6" Win64="no">
+              <File Name="zh-TW.pak" Id="_locales_zh_TW.pak_f7d5692b_6a6e_4db1_bfee_8016af9713b4" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\locales\zh-TW.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+          </Directory>
+          <Directory Id="_resources_bec9e250_a7fe_459a_9871_80b91e1195a0" Name="resources">
+            <Component Id="_resources_app.asar_55d56441_07c7_4482_ac88_17c5433cbf4a" Guid="c7b690ee-a072-41c3-8124-d31b46e5c11c" Win64="no">
+              <File Name="app.asar" Id="_resources_app.asar_55d56441_07c7_4482_ac88_17c5433cbf4a" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\resources\app.asar" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+            <Component Id="_resources_electron.asar_4f55b268_c7aa_4579_b713_c5cf934872d1" Guid="9a248767-4e50-44af-87bb-750499b3a64e" Win64="no">
+              <File Name="electron.asar" Id="_resources_electron.asar_4f55b268_c7aa_4579_b713_c5cf934872d1" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\resources\electron.asar" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+            </Component>
+          </Directory>          <Component Id="_LICENSE_8709fdf5_e338_4c47_8ffa_bbcf945d9db1" Guid="7cff01af-eb6c-44a3-8f70-0e28957d6cd6" Win64="no">
+            <File Name="LICENSE" Id="_LICENSE_8709fdf5_e338_4c47_8ffa_bbcf945d9db1" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\LICENSE" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_LICENSES.chromium.html_0ab155ac_d4f8_4077_97d2_194e25a6ca1f" Guid="a3a64197-deb9-4eda-bcee-fe78d23ed312" Win64="no">
+            <File Name="LICENSES.chromium.html" Id="_LICENSES.chromium.html_0ab155ac_d4f8_4077_97d2_194e25a6ca1f" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\LICENSES.chromium.html" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_console_l1_1_0.dll_dcc02feb_7355_4732_8ca9_483b9f72b436" Guid="87db35e6-1666-4ee2-979a-42989ac03cce" Win64="no">
+            <File Name="api-ms-win-core-console-l1-1-0.dll" Id="_api_ms_win_core_console_l1_1_0.dll_dcc02feb_7355_4732_8ca9_483b9f72b436" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-console-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_datetime_l1_1_0.dl_f41cae88_2c8f_4d7f_9c65_43982b0c3e0a" Guid="5d6190c5-8f1e-4cec-8413-54d834936b03" Win64="no">
+            <File Name="api-ms-win-core-datetime-l1-1-0.dll" Id="_api_ms_win_core_datetime_l1_1_0.dl_f41cae88_2c8f_4d7f_9c65_43982b0c3e0a" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-datetime-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_debug_l1_1_0.dll_498f1998_fb9c_475b_93a8_5a922c8ce5ba" Guid="3e2b752c-d75f-4565-b9ef-ec3917ce7698" Win64="no">
+            <File Name="api-ms-win-core-debug-l1-1-0.dll" Id="_api_ms_win_core_debug_l1_1_0.dll_498f1998_fb9c_475b_93a8_5a922c8ce5ba" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-debug-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_errorhandling_l1_1_07dbd908_e8be_4e94_b93f_cd1f0e34b7cb" Guid="a24dff44-db57-4cdb-b7b1-8c434b4d7b7b" Win64="no">
+            <File Name="api-ms-win-core-errorhandling-l1-1-0.dll" Id="_api_ms_win_core_errorhandling_l1_1_07dbd908_e8be_4e94_b93f_cd1f0e34b7cb" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-errorhandling-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_file_l1_1_0.dll_0dd3a167_2aa7_499d_adeb_1a4d7039d853" Guid="00d4bcd4-92b8-49ca-9a5a-e71eb0db5737" Win64="no">
+            <File Name="api-ms-win-core-file-l1-1-0.dll" Id="_api_ms_win_core_file_l1_1_0.dll_0dd3a167_2aa7_499d_adeb_1a4d7039d853" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-file-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_file_l1_2_0.dll_f9fd906d_e260_4520_8f62_02d747d76879" Guid="5fd11df6-b7e4-4a32-a0c9-dafb43eb37b0" Win64="no">
+            <File Name="api-ms-win-core-file-l1-2-0.dll" Id="_api_ms_win_core_file_l1_2_0.dll_f9fd906d_e260_4520_8f62_02d747d76879" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-file-l1-2-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_file_l2_1_0.dll_1c98bd2e_b11f_4b15_83e0_fbf4384e7b78" Guid="3a45a64d-a03a-4af5-954d-ba13fd11e478" Win64="no">
+            <File Name="api-ms-win-core-file-l2-1-0.dll" Id="_api_ms_win_core_file_l2_1_0.dll_1c98bd2e_b11f_4b15_83e0_fbf4384e7b78" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-file-l2-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_handle_l1_1_0.dll_3d62d8af_db95_4e9f_9055_6e742afebab0" Guid="dcce7186-b462-4bc1-9c9a-31eb9cabb125" Win64="no">
+            <File Name="api-ms-win-core-handle-l1-1-0.dll" Id="_api_ms_win_core_handle_l1_1_0.dll_3d62d8af_db95_4e9f_9055_6e742afebab0" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-handle-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_heap_l1_1_0.dll_be28939a_6386_441e_8669_fd62630e407b" Guid="c0f68c83-d99e-477a-a8fa-fdd89437f8a4" Win64="no">
+            <File Name="api-ms-win-core-heap-l1-1-0.dll" Id="_api_ms_win_core_heap_l1_1_0.dll_be28939a_6386_441e_8669_fd62630e407b" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-heap-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_interlocked_l1_1_0_86385ed9_dfcf_44b2_8091_aa77cb64e842" Guid="4a2a702c-0c6f-45f2-b220-33370e838de0" Win64="no">
+            <File Name="api-ms-win-core-interlocked-l1-1-0.dll" Id="_api_ms_win_core_interlocked_l1_1_0_86385ed9_dfcf_44b2_8091_aa77cb64e842" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-interlocked-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_libraryloader_l1_1_8693c4ad_c3d3_4563_85ba_ddffc23c53a7" Guid="645cf156-8d40-42d5-a362-9df8f75c3207" Win64="no">
+            <File Name="api-ms-win-core-libraryloader-l1-1-0.dll" Id="_api_ms_win_core_libraryloader_l1_1_8693c4ad_c3d3_4563_85ba_ddffc23c53a7" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-libraryloader-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_localization_l1_2__7a776a05_fb15_475e_98b5_2d9f02aaaecb" Guid="b9fa9e84-b750-4b67-8a95-0b1dfb28e94b" Win64="no">
+            <File Name="api-ms-win-core-localization-l1-2-0.dll" Id="_api_ms_win_core_localization_l1_2__7a776a05_fb15_475e_98b5_2d9f02aaaecb" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-localization-l1-2-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_memory_l1_1_0.dll_469e44f6_f17a_4c1b_9406_914d75c6333d" Guid="81b43ed6-52bc-45d2-9bb3-3048390234a3" Win64="no">
+            <File Name="api-ms-win-core-memory-l1-1-0.dll" Id="_api_ms_win_core_memory_l1_1_0.dll_469e44f6_f17a_4c1b_9406_914d75c6333d" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-memory-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_namedpipe_l1_1_0.d_94fee9ea_16cf_498b_b474_2b1c40bde086" Guid="41cc4370-07c5-463a-ac33-3cb86ad7e43d" Win64="no">
+            <File Name="api-ms-win-core-namedpipe-l1-1-0.dll" Id="_api_ms_win_core_namedpipe_l1_1_0.d_94fee9ea_16cf_498b_b474_2b1c40bde086" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-namedpipe-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_processenvironment_1617f75d_827d_4936_8256_a70a9a7c8c42" Guid="380478b1-939e-4de3-9bbf-8ac31260b732" Win64="no">
+            <File Name="api-ms-win-core-processenvironment-l1-1-0.dll" Id="_api_ms_win_core_processenvironment_1617f75d_827d_4936_8256_a70a9a7c8c42" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-processenvironment-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_processthreads_l1__1fd1f918_90d3_4a65_abf4_2f66d37dc83d" Guid="f664c0f7-33ea-4525-a34a-5b4fcf2ca0f6" Win64="no">
+            <File Name="api-ms-win-core-processthreads-l1-1-0.dll" Id="_api_ms_win_core_processthreads_l1__1fd1f918_90d3_4a65_abf4_2f66d37dc83d" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-processthreads-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_processthreads_l1__78a79db5_2168_429f_a558_e3df3d8bd4dc" Guid="c9bbd6b6-2ea2-42f2-8601-6a79dd03a876" Win64="no">
+            <File Name="api-ms-win-core-processthreads-l1-1-1.dll" Id="_api_ms_win_core_processthreads_l1__78a79db5_2168_429f_a558_e3df3d8bd4dc" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-processthreads-l1-1-1.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_profile_l1_1_0.dll_d7243837_169f_44fb_a554_d9cdd6da14e8" Guid="e5af4ff9-66a4-4652-9190-93ffa7f102e1" Win64="no">
+            <File Name="api-ms-win-core-profile-l1-1-0.dll" Id="_api_ms_win_core_profile_l1_1_0.dll_d7243837_169f_44fb_a554_d9cdd6da14e8" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-profile-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_rtlsupport_l1_1_0._7f2a6c29_18f2_44d8_ab68_bff5dbc75b39" Guid="141bcf78-73d0-4476-a2da-972e0bc50ca8" Win64="no">
+            <File Name="api-ms-win-core-rtlsupport-l1-1-0.dll" Id="_api_ms_win_core_rtlsupport_l1_1_0._7f2a6c29_18f2_44d8_ab68_bff5dbc75b39" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-rtlsupport-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_string_l1_1_0.dll_a067a4bc_92e8_4883_a5e3_b5169fee5f9d" Guid="bdff2a8e-58e7-4719-b745-1e7b4c400d23" Win64="no">
+            <File Name="api-ms-win-core-string-l1-1-0.dll" Id="_api_ms_win_core_string_l1_1_0.dll_a067a4bc_92e8_4883_a5e3_b5169fee5f9d" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-string-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_synch_l1_1_0.dll_33ff7e90_d351_4db4_8aeb_3f7e836faf57" Guid="e11c5a44-d02b-453c-b8cf-5405529fcf5d" Win64="no">
+            <File Name="api-ms-win-core-synch-l1-1-0.dll" Id="_api_ms_win_core_synch_l1_1_0.dll_33ff7e90_d351_4db4_8aeb_3f7e836faf57" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-synch-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_synch_l1_2_0.dll_a652de54_36f3_4cbb_ae19_aa89bc3ff10e" Guid="0a6e371b-77fc-4997-b04c-f87d71a33aed" Win64="no">
+            <File Name="api-ms-win-core-synch-l1-2-0.dll" Id="_api_ms_win_core_synch_l1_2_0.dll_a652de54_36f3_4cbb_ae19_aa89bc3ff10e" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-synch-l1-2-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_sysinfo_l1_1_0.dll_d7683da0_e881_496d_97fd_fc6a7098faf2" Guid="8cd3acd3-c74e-4f0f-8412-172f883f5e0e" Win64="no">
+            <File Name="api-ms-win-core-sysinfo-l1-1-0.dll" Id="_api_ms_win_core_sysinfo_l1_1_0.dll_d7683da0_e881_496d_97fd_fc6a7098faf2" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-sysinfo-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_timezone_l1_1_0.dl_18398cd2_a698_49c9_ad8b_7d33eb23b13a" Guid="c86fabd5-ad3e-4a26-b957-8962bacd0d01" Win64="no">
+            <File Name="api-ms-win-core-timezone-l1-1-0.dll" Id="_api_ms_win_core_timezone_l1_1_0.dl_18398cd2_a698_49c9_ad8b_7d33eb23b13a" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-timezone-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_core_util_l1_1_0.dll_27eed573_bbeb_40f6_a299_50e6e491d4dd" Guid="b7e7bceb-93de-487a-9ee4-c829792a5908" Win64="no">
+            <File Name="api-ms-win-core-util-l1-1-0.dll" Id="_api_ms_win_core_util_l1_1_0.dll_27eed573_bbeb_40f6_a299_50e6e491d4dd" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-core-util-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_crt_conio_l1_1_0.dll_35f6d6d6_f5cd_4b36_9019_899d27a0b7c2" Guid="2f52e048-2a42-4ed4-80f0-d3797c91c4c0" Win64="no">
+            <File Name="api-ms-win-crt-conio-l1-1-0.dll" Id="_api_ms_win_crt_conio_l1_1_0.dll_35f6d6d6_f5cd_4b36_9019_899d27a0b7c2" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-crt-conio-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_crt_convert_l1_1_0.dll_35aba773_85af_4763_b44c_34753310b98e" Guid="cf9342ed-9c61-4ddc-b6d2-19bf2a7a353d" Win64="no">
+            <File Name="api-ms-win-crt-convert-l1-1-0.dll" Id="_api_ms_win_crt_convert_l1_1_0.dll_35aba773_85af_4763_b44c_34753310b98e" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-crt-convert-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_crt_environment_l1_1_0._eef58466_41c2_4ab7_8d00_0b1d2f381bc1" Guid="4a6215df-ae48-49e6-b41d-5bd59fb28f1a" Win64="no">
+            <File Name="api-ms-win-crt-environment-l1-1-0.dll" Id="_api_ms_win_crt_environment_l1_1_0._eef58466_41c2_4ab7_8d00_0b1d2f381bc1" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-crt-environment-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_crt_filesystem_l1_1_0.d_6f8a9541_aaa2_47b2_94c0_e2dc2835db36" Guid="02418d1d-ef2d-400e-8538-1088beeb9b43" Win64="no">
+            <File Name="api-ms-win-crt-filesystem-l1-1-0.dll" Id="_api_ms_win_crt_filesystem_l1_1_0.d_6f8a9541_aaa2_47b2_94c0_e2dc2835db36" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-crt-filesystem-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_crt_heap_l1_1_0.dll_0ab02396_af97_4c7b_882f_56c2efb9cf7a" Guid="eb36a7e2-0521-48b3-875e-cff794deedac" Win64="no">
+            <File Name="api-ms-win-crt-heap-l1-1-0.dll" Id="_api_ms_win_crt_heap_l1_1_0.dll_0ab02396_af97_4c7b_882f_56c2efb9cf7a" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-crt-heap-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_crt_locale_l1_1_0.dll_2d6fc848_c36f_46e2_8429_f56478b1dc8c" Guid="2d97512e-15b7-4a83-ab0f-828bd3b1f69f" Win64="no">
+            <File Name="api-ms-win-crt-locale-l1-1-0.dll" Id="_api_ms_win_crt_locale_l1_1_0.dll_2d6fc848_c36f_46e2_8429_f56478b1dc8c" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-crt-locale-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_crt_math_l1_1_0.dll_7109be89_f941_427d_8826_37964862ad0c" Guid="74bf59f7-b673-479d-81cc-ed79e23fbe17" Win64="no">
+            <File Name="api-ms-win-crt-math-l1-1-0.dll" Id="_api_ms_win_crt_math_l1_1_0.dll_7109be89_f941_427d_8826_37964862ad0c" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-crt-math-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_crt_multibyte_l1_1_0.dl_edd4809e_8061_4169_965b_b4c1d888abc5" Guid="6bc3ca9b-f0fe-486e-8bc6-99bd3ef73597" Win64="no">
+            <File Name="api-ms-win-crt-multibyte-l1-1-0.dll" Id="_api_ms_win_crt_multibyte_l1_1_0.dl_edd4809e_8061_4169_965b_b4c1d888abc5" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-crt-multibyte-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_crt_private_l1_1_0.dll_db0c17f2_fedf_4c62_bf17_e68fe976b626" Guid="345cc50e-9cbc-45fc-a6ad-20740a2777fe" Win64="no">
+            <File Name="api-ms-win-crt-private-l1-1-0.dll" Id="_api_ms_win_crt_private_l1_1_0.dll_db0c17f2_fedf_4c62_bf17_e68fe976b626" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-crt-private-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_crt_process_l1_1_0.dll_0249f6e2_e43d_433e_9611_c78be1447314" Guid="03a9e27b-a4ae-4b7f-87d7-c3606534b6f7" Win64="no">
+            <File Name="api-ms-win-crt-process-l1-1-0.dll" Id="_api_ms_win_crt_process_l1_1_0.dll_0249f6e2_e43d_433e_9611_c78be1447314" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-crt-process-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_crt_runtime_l1_1_0.dll_843af503_0f14_40d3_af56_33d19bb7cb58" Guid="52055d34-3222-4084-be6f-e806e9c362fe" Win64="no">
+            <File Name="api-ms-win-crt-runtime-l1-1-0.dll" Id="_api_ms_win_crt_runtime_l1_1_0.dll_843af503_0f14_40d3_af56_33d19bb7cb58" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-crt-runtime-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_crt_stdio_l1_1_0.dll_40ba8ad1_b5eb_490a_8d53_452b11cd7cdd" Guid="c51ded89-2660-4807-826d-0566443e6a77" Win64="no">
+            <File Name="api-ms-win-crt-stdio-l1-1-0.dll" Id="_api_ms_win_crt_stdio_l1_1_0.dll_40ba8ad1_b5eb_490a_8d53_452b11cd7cdd" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-crt-stdio-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_crt_string_l1_1_0.dll_759ddb29_7ce2_4e50_82e5_370ae81e4c57" Guid="a053f84f-c049-444f-bc5b-9faaf1d0bfd0" Win64="no">
+            <File Name="api-ms-win-crt-string-l1-1-0.dll" Id="_api_ms_win_crt_string_l1_1_0.dll_759ddb29_7ce2_4e50_82e5_370ae81e4c57" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-crt-string-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_crt_time_l1_1_0.dll_bd6cc9ec_50f4_419a_b8c3_fc0a1763f774" Guid="28bf4f9e-58df-4cd5-b5db-f93b3d392f4a" Win64="no">
+            <File Name="api-ms-win-crt-time-l1-1-0.dll" Id="_api_ms_win_crt_time_l1_1_0.dll_bd6cc9ec_50f4_419a_b8c3_fc0a1763f774" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-crt-time-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_api_ms_win_crt_utility_l1_1_0.dll_fde05a50_1ff9_4855_9fd4_ba63f8993406" Guid="f6139ea1-9e81-40d8-9b8e-55148a910b3a" Win64="no">
+            <File Name="api-ms-win-crt-utility-l1-1-0.dll" Id="_api_ms_win_crt_utility_l1_1_0.dll_fde05a50_1ff9_4855_9fd4_ba63f8993406" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\api-ms-win-crt-utility-l1-1-0.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_blink_image_resources_200_percent._874fe684_dc3a_4bda_bf2d_1e0435c514cc" Guid="1877e913-0ffa-457d-b096-6d3103b03f2f" Win64="no">
+            <File Name="blink_image_resources_200_percent.pak" Id="_blink_image_resources_200_percent._874fe684_dc3a_4bda_bf2d_1e0435c514cc" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\blink_image_resources_200_percent.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_content_resources_200_percent.pak_cf003b78_d865_43ff_87c6_cc1d923625d7" Guid="1033977e-188c-40a6-a636-ea89b312015e" Win64="no">
+            <File Name="content_resources_200_percent.pak" Id="_content_resources_200_percent.pak_cf003b78_d865_43ff_87c6_cc1d923625d7" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\content_resources_200_percent.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_content_shell.pak_45034c38_2942_42e9_8a62_b8b307f9eb9d" Guid="cf703818-6270-492b-acdb-93b9384053bd" Win64="no">
+            <File Name="content_shell.pak" Id="_content_shell.pak_45034c38_2942_42e9_8a62_b8b307f9eb9d" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\content_shell.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_d3dcompiler_47.dll_0e390649_f9c1_43e7_b2a2_b3fc3a9ae37b" Guid="54df749f-c6bc-420c-a059-706db00175dd" Win64="no">
+            <File Name="d3dcompiler_47.dll" Id="_d3dcompiler_47.dll_0e390649_f9c1_43e7_b2a2_b3fc3a9ae37b" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\d3dcompiler_47.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_ffmpeg.dll_47cb1e64_4d3c_4458_9568_ef12eaaa9fa1" Guid="fa75b224-ef58-4553-8ebd-a5878f4d2168" Win64="no">
+            <File Name="ffmpeg.dll" Id="_ffmpeg.dll_47cb1e64_4d3c_4458_9568_ef12eaaa9fa1" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\ffmpeg.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_icudtl.dat_7b5ea9a4_f98e_41ce_915b_343bd0ce9f02" Guid="1b8b3a29-de3e-48aa-855f-90ebde367d6f" Win64="no">
+            <File Name="icudtl.dat" Id="_icudtl.dat_7b5ea9a4_f98e_41ce_915b_343bd0ce9f02" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\icudtl.dat" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_libEGL.dll_b91b2529_e71c_4007_9d6c_6aad5500f500" Guid="3edbcae3-eb56-4b14-b4a6-68199ca3ae45" Win64="no">
+            <File Name="libEGL.dll" Id="_libEGL.dll_b91b2529_e71c_4007_9d6c_6aad5500f500" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\libEGL.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_libGLESv2.dll_6ab9685e_716a_483f_a423_667150e3df22" Guid="464b841e-7344-4d4d-a901-99a73f2634b4" Win64="no">
+            <File Name="libGLESv2.dll" Id="_libGLESv2.dll_6ab9685e_716a_483f_a423_667150e3df22" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\libGLESv2.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_msvcp140.dll_3c2d1368_fb15_43d6_b461_df5193fb58af" Guid="1811e641-87f9-4a19-bf4d-76be5b1c91f5" Win64="no">
+            <File Name="msvcp140.dll" Id="_msvcp140.dll_3c2d1368_fb15_43d6_b461_df5193fb58af" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\msvcp140.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_natives_blob.bin_92c219ea_757d_4392_8ffa_8f7f66b84c77" Guid="f597a8b2-4385-405f-b8c5-8f5c5eeabfff" Win64="no">
+            <File Name="natives_blob.bin" Id="_natives_blob.bin_92c219ea_757d_4392_8ffa_8f7f66b84c77" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\natives_blob.bin" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_node.dll_d03a310e_c679_4fe5_828e_f76f3813df20" Guid="36b0f0a9-8f67-4e60-8f43-c3ba4922dbe4" Win64="no">
+            <File Name="node.dll" Id="_node.dll_d03a310e_c679_4fe5_828e_f76f3813df20" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\node.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_pdf_viewer_resources.pak_7123c10a_4647_4b60_b8b1_2ef88f27b9de" Guid="2654481c-6650-455c-a690-0ee1bdde6715" Win64="no">
+            <File Name="pdf_viewer_resources.pak" Id="_pdf_viewer_resources.pak_7123c10a_4647_4b60_b8b1_2ef88f27b9de" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\pdf_viewer_resources.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_shoppinglist.exe_591ddda7_c1c6_4dc5_b7ce_8aff10f7c739" Guid="c6246a9e-6e68-4d27-b4d4-bf7fcc7cf5c8" Win64="no">
+            <File Name="shoppinglist.exe" Id="_shoppinglist.exe_591ddda7_c1c6_4dc5_b7ce_8aff10f7c739" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\shoppinglist.exe" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_snapshot_blob.bin_9fdd915f_7d00_451d_936c_3d46a5074986" Guid="e197ce5f-c570-4093-9a5d-3bf050679879" Win64="no">
+            <File Name="snapshot_blob.bin" Id="_snapshot_blob.bin_9fdd915f_7d00_451d_936c_3d46a5074986" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\snapshot_blob.bin" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_ucrtbase.dll_ea50c7cf_a555_447e_b5a6_b3cceb912261" Guid="82c83a2a-9a54-4521-a4ae-2f72f48cf33d" Win64="no">
+            <File Name="ucrtbase.dll" Id="_ucrtbase.dll_ea50c7cf_a555_447e_b5a6_b3cceb912261" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\ucrtbase.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_ui_resources_200_percent.pak_3090e14b_671a_4763_b3f8_4dbca17e1a8e" Guid="e017fef4-70c6-4e79-9612-5dd403bf73cc" Win64="no">
+            <File Name="ui_resources_200_percent.pak" Id="_ui_resources_200_percent.pak_3090e14b_671a_4763_b3f8_4dbca17e1a8e" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\ui_resources_200_percent.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_vcruntime140.dll_c152b74b_f65d_48d6_b5ff_be9d395d2750" Guid="085ae848-0da2-4e6c-aea2-60a2a3b893e8" Win64="no">
+            <File Name="vcruntime140.dll" Id="_vcruntime140.dll_c152b74b_f65d_48d6_b5ff_be9d395d2750" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\vcruntime140.dll" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_version_2893c181_8f93_45ba_b427_8db7bbe5cf19" Guid="f9f784c0-7feb-4456-8513-40e474711171" Win64="no">
+            <File Name="version" Id="_version_2893c181_8f93_45ba_b427_8db7bbe5cf19" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\version" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+          <Component Id="_views_resources_200_percent.pak_982b0df7_1b71_4518_aecd_3713811eb703" Guid="01ba3468-00d1-46c5-b997-37ba8f9b428e" Win64="no">
+            <File Name="views_resources_200_percent.pak" Id="_views_resources_200_percent.pak_982b0df7_1b71_4518_aecd_3713811eb703" Source="E:\Nabwab\electronshoppinglist\release-builds\shoppinglist-win32-ia32\views_resources_200_percent.pak" KeyPath="yes" Checksum="yes" ProcessorArchitecture="x86"/>
+          </Component>
+        </Directory>
+      </Directory>
+      <!-- Start Menu -->
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="Our Code World Inc"/>
+      </Directory>
+    </Directory>
+
+    <!-- Step 3: Add app to Start Menu -->
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="ApplicationShortcut" Guid="a4408304-7c4b-48ee-aeac-4dc8668bbf46" Win64='no'>
+        <Shortcut Id="ApplicationStartMenuShortcut"
+                  Name="Our Code World Desktop App"
+                  Description="This is a demo application"
+                  Target="[APPLICATIONROOTDIRECTORY]OurCodeWorld.exe"
+                  WorkingDirectory="APPLICATIONROOTDIRECTORY">
+          <ShortcutProperty Key="System.AppUserModel.ID" Value="com.squirrel.Our Code World Desktop App.OurCodeWorld" />
+        </Shortcut>
+        <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
+        <RegistryValue Root="HKCU"
+                       Key="Software\Microsoft\Our Code World Desktop App"
+                       Name="installed"
+                       Type="integer"
+                       Value="1"
+                       KeyPath="yes"/>
+      </Component>
+    </DirectoryRef>
+
+    <!-- Step 4: Tell WiX to install the files -->
+    <Feature Id="MainApplication" Title="Main Application" Level="1">
+      <ComponentRef Id="_locales_am.pak_635382de_03ec_47fb_bb63_65fa4d45e24a" />
+      <ComponentRef Id="_locales_ar.pak_badec90b_1261_4cf8_a596_3da6d8d5c12e" />
+      <ComponentRef Id="_locales_bg.pak_4fbc9af0_f7fd_49b8_a2fe_a3d0b9ce2a6d" />
+      <ComponentRef Id="_locales_bn.pak_56247380_2bb0_4a9e_846c_702b625cfa57" />
+      <ComponentRef Id="_locales_ca.pak_8077625f_f4da_4dab_bb51_ed6427b6ca60" />
+      <ComponentRef Id="_locales_cs.pak_d928730a_ca22_4dcf_b480_f84b7a371d33" />
+      <ComponentRef Id="_locales_da.pak_20da9415_11df_41d6_8ab9_1157c29d87d8" />
+      <ComponentRef Id="_locales_de.pak_c03f3d2f_a356_4656_ac70_508ad1b31460" />
+      <ComponentRef Id="_locales_el.pak_4ce6a7ac_4cd5_406e_8fa4_c5bee4c332e1" />
+      <ComponentRef Id="_locales_en_GB.pak_7c648ae8_b6a0_47c3_bc8e_178f56f3baec" />
+      <ComponentRef Id="_locales_en_US.pak_2c8e1292_ac6a_4f5f_9bca_1d2cf9e9e7f3" />
+      <ComponentRef Id="_locales_es_419.pak_24c847f1_6dc9_4f45_8daa_c6ef6b9ee8f1" />
+      <ComponentRef Id="_locales_es.pak_d5c092da_6a97_4421_8b95_171e6b0758d4" />
+      <ComponentRef Id="_locales_et.pak_3119886c_df04_4af1_bac5_b8ab253502ce" />
+      <ComponentRef Id="_locales_fa.pak_02b32ae5_62b2_4972_bdee_657e517edcad" />
+      <ComponentRef Id="_locales_fake_bidi.pak_0ae0300b_785c_4541_ace9_dc34f8cfcbd1" />
+      <ComponentRef Id="_locales_fi.pak_02918370_f003_469b_9514_b2057bfbceb4" />
+      <ComponentRef Id="_locales_fil.pak_49949b8d_9867_4ecb_911a_73600b35e258" />
+      <ComponentRef Id="_locales_fr.pak_26bf4506_e1a0_4e42_b48e_41de630fcf3b" />
+      <ComponentRef Id="_locales_gu.pak_46106f22_9cd4_48e3_941b_cea7b961f24a" />
+      <ComponentRef Id="_locales_he.pak_8836866b_7ae7_4862_ac9b_6b01f33b03a9" />
+      <ComponentRef Id="_locales_hi.pak_3009bd0a_5725_436b_9db9_e0dea6ed02a2" />
+      <ComponentRef Id="_locales_hr.pak_b7754820_5b6e_4a50_8581_acaf485063ad" />
+      <ComponentRef Id="_locales_hu.pak_1dc60559_a12f_4c93_8d93_59875995c5ea" />
+      <ComponentRef Id="_locales_id.pak_4a188e7d_171e_4449_bba8_1cecc18c4a1f" />
+      <ComponentRef Id="_locales_it.pak_6470e6ef_24e8_430b_bff3_e9c36f6c8280" />
+      <ComponentRef Id="_locales_ja.pak_ca6bb76c_c970_4c34_9936_6516ecac4689" />
+      <ComponentRef Id="_locales_kn.pak_3a711116_f7fa_4779_8e8a_c03e8c3fc906" />
+      <ComponentRef Id="_locales_ko.pak_ac3736d4_6afd_46a6_a42b_013560260ad9" />
+      <ComponentRef Id="_locales_lt.pak_1ba198c9_d09d_4055_8701_2f2343daf61e" />
+      <ComponentRef Id="_locales_lv.pak_c908963a_a180_4e7f_bfa4_e77aad9c54e3" />
+      <ComponentRef Id="_locales_ml.pak_59a0d73a_2308_48ac_9fc3_a1b52ed946c1" />
+      <ComponentRef Id="_locales_mr.pak_9f0f952f_4126_4ca2_8756_519effb1a2f4" />
+      <ComponentRef Id="_locales_ms.pak_62401e8a_4a72_446a_9278_962cbbceb1e6" />
+      <ComponentRef Id="_locales_nb.pak_8bc5fbe8_2686_4b3e_acd8_9275af640cd3" />
+      <ComponentRef Id="_locales_nl.pak_4c0f3f11_18a8_4b81_adad_56961b412b80" />
+      <ComponentRef Id="_locales_pl.pak_175ecf2e_730e_4dcb_8f3f_0aa0f78fa0ac" />
+      <ComponentRef Id="_locales_pt_BR.pak_d19e8d15_da6e_416a_8eae_f42f5faeb8fd" />
+      <ComponentRef Id="_locales_pt_PT.pak_f157546b_fb30_4351_b2cf_7adaf9195190" />
+      <ComponentRef Id="_locales_ro.pak_d875fc55_df90_4ca7_9f60_b2b6398aebf4" />
+      <ComponentRef Id="_locales_ru.pak_942c26dd_acfd_45f1_b894_175124a09d7d" />
+      <ComponentRef Id="_locales_sk.pak_099e3e95_f961_42ed_84f2_b26e6c4e601d" />
+      <ComponentRef Id="_locales_sl.pak_491a4907_d4ba_422e_9323_91827a635155" />
+      <ComponentRef Id="_locales_sr.pak_73e0a7b9_f9ba_4a44_8aed_056dc331b41a" />
+      <ComponentRef Id="_locales_sv.pak_585732af_6308_493c_90ef_93cbca5910c0" />
+      <ComponentRef Id="_locales_sw.pak_b9e5aad2_1f13_47f1_95ab_6a2388d6201d" />
+      <ComponentRef Id="_locales_ta.pak_55cafdc8_b140_4c5d_b8d9_cf118f19f17e" />
+      <ComponentRef Id="_locales_te.pak_5c3e5fa0_f4ba_41d7_a400_0fe77b92023d" />
+      <ComponentRef Id="_locales_th.pak_1dec9424_b94e_4f30_b844_be1998233e41" />
+      <ComponentRef Id="_locales_tr.pak_16115836_4042_4c0e_beab_b91c99328b2d" />
+      <ComponentRef Id="_locales_uk.pak_34a54a56_fb5f_4a3d_bc85_4a4121c6e4f3" />
+      <ComponentRef Id="_locales_vi.pak_79b00bce_98c6_42b8_9f3a_ec0b797241d4" />
+      <ComponentRef Id="_locales_zh_CN.pak_9971452c_9ae7_4b3e_a10a_be720c15e75a" />
+      <ComponentRef Id="_locales_zh_TW.pak_f7d5692b_6a6e_4db1_bfee_8016af9713b4" />
+      <ComponentRef Id="_resources_app.asar_55d56441_07c7_4482_ac88_17c5433cbf4a" />
+      <ComponentRef Id="_resources_electron.asar_4f55b268_c7aa_4579_b713_c5cf934872d1" />
+      <ComponentRef Id="_LICENSE_8709fdf5_e338_4c47_8ffa_bbcf945d9db1" />
+      <ComponentRef Id="_LICENSES.chromium.html_0ab155ac_d4f8_4077_97d2_194e25a6ca1f" />
+      <ComponentRef Id="_api_ms_win_core_console_l1_1_0.dll_dcc02feb_7355_4732_8ca9_483b9f72b436" />
+      <ComponentRef Id="_api_ms_win_core_datetime_l1_1_0.dl_f41cae88_2c8f_4d7f_9c65_43982b0c3e0a" />
+      <ComponentRef Id="_api_ms_win_core_debug_l1_1_0.dll_498f1998_fb9c_475b_93a8_5a922c8ce5ba" />
+      <ComponentRef Id="_api_ms_win_core_errorhandling_l1_1_07dbd908_e8be_4e94_b93f_cd1f0e34b7cb" />
+      <ComponentRef Id="_api_ms_win_core_file_l1_1_0.dll_0dd3a167_2aa7_499d_adeb_1a4d7039d853" />
+      <ComponentRef Id="_api_ms_win_core_file_l1_2_0.dll_f9fd906d_e260_4520_8f62_02d747d76879" />
+      <ComponentRef Id="_api_ms_win_core_file_l2_1_0.dll_1c98bd2e_b11f_4b15_83e0_fbf4384e7b78" />
+      <ComponentRef Id="_api_ms_win_core_handle_l1_1_0.dll_3d62d8af_db95_4e9f_9055_6e742afebab0" />
+      <ComponentRef Id="_api_ms_win_core_heap_l1_1_0.dll_be28939a_6386_441e_8669_fd62630e407b" />
+      <ComponentRef Id="_api_ms_win_core_interlocked_l1_1_0_86385ed9_dfcf_44b2_8091_aa77cb64e842" />
+      <ComponentRef Id="_api_ms_win_core_libraryloader_l1_1_8693c4ad_c3d3_4563_85ba_ddffc23c53a7" />
+      <ComponentRef Id="_api_ms_win_core_localization_l1_2__7a776a05_fb15_475e_98b5_2d9f02aaaecb" />
+      <ComponentRef Id="_api_ms_win_core_memory_l1_1_0.dll_469e44f6_f17a_4c1b_9406_914d75c6333d" />
+      <ComponentRef Id="_api_ms_win_core_namedpipe_l1_1_0.d_94fee9ea_16cf_498b_b474_2b1c40bde086" />
+      <ComponentRef Id="_api_ms_win_core_processenvironment_1617f75d_827d_4936_8256_a70a9a7c8c42" />
+      <ComponentRef Id="_api_ms_win_core_processthreads_l1__1fd1f918_90d3_4a65_abf4_2f66d37dc83d" />
+      <ComponentRef Id="_api_ms_win_core_processthreads_l1__78a79db5_2168_429f_a558_e3df3d8bd4dc" />
+      <ComponentRef Id="_api_ms_win_core_profile_l1_1_0.dll_d7243837_169f_44fb_a554_d9cdd6da14e8" />
+      <ComponentRef Id="_api_ms_win_core_rtlsupport_l1_1_0._7f2a6c29_18f2_44d8_ab68_bff5dbc75b39" />
+      <ComponentRef Id="_api_ms_win_core_string_l1_1_0.dll_a067a4bc_92e8_4883_a5e3_b5169fee5f9d" />
+      <ComponentRef Id="_api_ms_win_core_synch_l1_1_0.dll_33ff7e90_d351_4db4_8aeb_3f7e836faf57" />
+      <ComponentRef Id="_api_ms_win_core_synch_l1_2_0.dll_a652de54_36f3_4cbb_ae19_aa89bc3ff10e" />
+      <ComponentRef Id="_api_ms_win_core_sysinfo_l1_1_0.dll_d7683da0_e881_496d_97fd_fc6a7098faf2" />
+      <ComponentRef Id="_api_ms_win_core_timezone_l1_1_0.dl_18398cd2_a698_49c9_ad8b_7d33eb23b13a" />
+      <ComponentRef Id="_api_ms_win_core_util_l1_1_0.dll_27eed573_bbeb_40f6_a299_50e6e491d4dd" />
+      <ComponentRef Id="_api_ms_win_crt_conio_l1_1_0.dll_35f6d6d6_f5cd_4b36_9019_899d27a0b7c2" />
+      <ComponentRef Id="_api_ms_win_crt_convert_l1_1_0.dll_35aba773_85af_4763_b44c_34753310b98e" />
+      <ComponentRef Id="_api_ms_win_crt_environment_l1_1_0._eef58466_41c2_4ab7_8d00_0b1d2f381bc1" />
+      <ComponentRef Id="_api_ms_win_crt_filesystem_l1_1_0.d_6f8a9541_aaa2_47b2_94c0_e2dc2835db36" />
+      <ComponentRef Id="_api_ms_win_crt_heap_l1_1_0.dll_0ab02396_af97_4c7b_882f_56c2efb9cf7a" />
+      <ComponentRef Id="_api_ms_win_crt_locale_l1_1_0.dll_2d6fc848_c36f_46e2_8429_f56478b1dc8c" />
+      <ComponentRef Id="_api_ms_win_crt_math_l1_1_0.dll_7109be89_f941_427d_8826_37964862ad0c" />
+      <ComponentRef Id="_api_ms_win_crt_multibyte_l1_1_0.dl_edd4809e_8061_4169_965b_b4c1d888abc5" />
+      <ComponentRef Id="_api_ms_win_crt_private_l1_1_0.dll_db0c17f2_fedf_4c62_bf17_e68fe976b626" />
+      <ComponentRef Id="_api_ms_win_crt_process_l1_1_0.dll_0249f6e2_e43d_433e_9611_c78be1447314" />
+      <ComponentRef Id="_api_ms_win_crt_runtime_l1_1_0.dll_843af503_0f14_40d3_af56_33d19bb7cb58" />
+      <ComponentRef Id="_api_ms_win_crt_stdio_l1_1_0.dll_40ba8ad1_b5eb_490a_8d53_452b11cd7cdd" />
+      <ComponentRef Id="_api_ms_win_crt_string_l1_1_0.dll_759ddb29_7ce2_4e50_82e5_370ae81e4c57" />
+      <ComponentRef Id="_api_ms_win_crt_time_l1_1_0.dll_bd6cc9ec_50f4_419a_b8c3_fc0a1763f774" />
+      <ComponentRef Id="_api_ms_win_crt_utility_l1_1_0.dll_fde05a50_1ff9_4855_9fd4_ba63f8993406" />
+      <ComponentRef Id="_blink_image_resources_200_percent._874fe684_dc3a_4bda_bf2d_1e0435c514cc" />
+      <ComponentRef Id="_content_resources_200_percent.pak_cf003b78_d865_43ff_87c6_cc1d923625d7" />
+      <ComponentRef Id="_content_shell.pak_45034c38_2942_42e9_8a62_b8b307f9eb9d" />
+      <ComponentRef Id="_d3dcompiler_47.dll_0e390649_f9c1_43e7_b2a2_b3fc3a9ae37b" />
+      <ComponentRef Id="_ffmpeg.dll_47cb1e64_4d3c_4458_9568_ef12eaaa9fa1" />
+      <ComponentRef Id="_icudtl.dat_7b5ea9a4_f98e_41ce_915b_343bd0ce9f02" />
+      <ComponentRef Id="_libEGL.dll_b91b2529_e71c_4007_9d6c_6aad5500f500" />
+      <ComponentRef Id="_libGLESv2.dll_6ab9685e_716a_483f_a423_667150e3df22" />
+      <ComponentRef Id="_msvcp140.dll_3c2d1368_fb15_43d6_b461_df5193fb58af" />
+      <ComponentRef Id="_natives_blob.bin_92c219ea_757d_4392_8ffa_8f7f66b84c77" />
+      <ComponentRef Id="_node.dll_d03a310e_c679_4fe5_828e_f76f3813df20" />
+      <ComponentRef Id="_pdf_viewer_resources.pak_7123c10a_4647_4b60_b8b1_2ef88f27b9de" />
+      <ComponentRef Id="_shoppinglist.exe_591ddda7_c1c6_4dc5_b7ce_8aff10f7c739" />
+      <ComponentRef Id="_snapshot_blob.bin_9fdd915f_7d00_451d_936c_3d46a5074986" />
+      <ComponentRef Id="_ucrtbase.dll_ea50c7cf_a555_447e_b5a6_b3cceb912261" />
+      <ComponentRef Id="_ui_resources_200_percent.pak_3090e14b_671a_4763_b3f8_4dbca17e1a8e" />
+      <ComponentRef Id="_vcruntime140.dll_c152b74b_f65d_48d6_b5ff_be9d395d2750" />
+      <ComponentRef Id="_version_2893c181_8f93_45ba_b427_8db7bbe5cf19" />
+      <ComponentRef Id="_views_resources_200_percent.pak_982b0df7_1b71_4518_aecd_3713811eb703" />
+      <ComponentRef Id="ApplicationShortcut" />
+    </Feature>
+  </Product>
+</Wix>
